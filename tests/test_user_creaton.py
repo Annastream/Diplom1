@@ -6,8 +6,8 @@ from data import EXISTING_USER, MISSING_FIELDS_USER
 @allure.story("Тестирование создания пользователей с различными условиями")
 class TestUserCreation:
 
-    @allure.title("Тест создания уникального пользователя")
-    def test_create_unique_user(self, setup_unique_user):
+    @allure.title("Тест создания уникального пользователя ")
+    def test_create_unique_user_with_token_with_space(self, setup_unique_user):
         user_data = setup_unique_user
 
         auth_response = login_user(user_data)
@@ -15,15 +15,16 @@ class TestUserCreation:
             f"Ошибка при авторизации: {auth_response.status_code}. Ответ: {auth_response.text}"
 
         auth_token = auth_response.json().get("accessToken")
-        token = auth_token.split(' ')[1] if ' ' in auth_token else auth_token
-        assert token, "Токен отсутствует или имеет неверный формат"
+        assert ' ' in auth_token, "Токен должен содержать пробел"
+        token = auth_token.split(' ')[1]
+        assert token, "Токен отсутствует"
 
         response = get_user_data(token)
-
         assert response.status_code == 200, \
             f"Ожидался код 200, получен {response.status_code}. Ответ: {response.text}"
         assert response.json().get("user", {}).get("email") == user_data["email"], \
             f"Ожидался email: {user_data['email']}, получен: {response.json().get('user', {}).get('email')}"
+
 
     @allure.title("Тест создания уже существующего пользователя")
     def test_create_existing_user(self):

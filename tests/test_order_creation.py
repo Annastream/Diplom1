@@ -8,16 +8,23 @@ class TestOrder:
 
     @allure.title("Тест создания заказа с авторизацией")
     def test_create_order_with_auth(self, login_user):
+        # Авторизация и проверка успешного входа
         auth_response = login_user(EXISTING_USER)
         assert auth_response.status_code == 200, f"Ошибка во время входа в систему: {auth_response.text}"
 
+        # Получаем токен и проверяем его формат
         auth_token = auth_response.json().get("accessToken")
-        token = auth_token.split(' ')[1] if ' ' in auth_token else auth_token
-        assert token, "Токен отсутствует или имеет неверный формат"
+        assert auth_token.startswith("Bearer "), "Токен должен начинаться с 'Bearer '"
 
-        order_data = {"ingredients": INGREDIENTS[:2]}  # Два ингредиента
+        # Извлекаем сам токен (без 'Bearer ')
+        token = auth_token.split(' ')[1]
+        assert token, "Токен не должен быть пустым"
+
+        # Создаем заказ
+        order_data = {"ingredients": INGREDIENTS[:2]}
         response = create_order(order_data, token)
 
+        # Проверяем успешное создание заказа
         assert response.status_code == 200, f"Ошибка при создании заказа: {response.text}"
         assert response.json().get("success") is True, "Не удалось создать заказ"
 
@@ -27,6 +34,9 @@ class TestOrder:
         response = create_order(order_data)
 
         assert response.status_code == 200, f"Ожидаемый ответ 200, но вернулся {response.status_code}"
+        response_data = response.json()
+        assert response_data["success"] is True, "Не удалось создать заказ"
+        assert "order" in response_data, "В ответе отсутствует информация о заказе"
 
     @allure.title("Тест создания заказа с ингредиентами")
     def test_create_order_with_ingredients(self):
@@ -50,3 +60,14 @@ class TestOrder:
         response = create_order(order_data)
 
         assert response.status_code == 500, f"Ожидаемый ответ 500 Internal Server Error, но вернулся {response.status_code}"
+
+        # 4. Парсинг ответа
+        # 2. Проверка типа ответа (HTML вместо JSON)
+        assert "text/html" in response.headers.get("Content-Type", ""), (
+            "При ошибке 500 ожидается HTML-ответ"
+        )
+
+        # 3. Проверка содержимого HTML-ответа
+        assert "Internal Server Error" in response.text, (
+            "В ответе отсутствует текст ошибки")
+

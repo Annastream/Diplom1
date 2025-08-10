@@ -29,12 +29,12 @@ def restore_user_data(email, original_data):
         print(f"Failed to restore user data for {email}. Response: {response.text}")
 
 
-@allure.title("Удаление пользователя")  # Исправлено название шага
+@allure.title("Удаление пользователя")
 def delete_user(email, password):
     access_token = get_access_token(email, password)
     response = requests.delete(
         ENDPOINTS["user"],
-        headers={"Authorization": f"Bearer {access_token}"}  # Исправлена f-строка
+        headers={"Authorization": f"Bearer {access_token}"}
     )
     if response.status_code == 200:
         print(f"User {email} deleted successfully.")
@@ -50,11 +50,11 @@ def get_user_orders(token=None):
     response = requests.get(ENDPOINTS["orders"], headers=headers)
     return response
 
-@allure.title("Создание заказа")  # Исправлено название шага
+@allure.title("Создание заказа")
 def create_order(order_data, token=None):
     headers = {}
     if token:
-        headers = {"Authorization": f"Bearer {token}"}  # Исправлена точка с запятой
+        headers = {"Authorization": f"Bearer {token}"}
     response = requests.post(ENDPOINTS["orders"], json=order_data, headers=headers)
     return response
 

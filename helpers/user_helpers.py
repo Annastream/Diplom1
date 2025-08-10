@@ -16,3 +16,4 @@ def generate_user_data(email_suffix="@example.com"):
         "password": password,
         "name": name
     }
+
