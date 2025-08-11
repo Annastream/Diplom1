@@ -66,11 +66,4 @@ def get_user_data(token):
     return response
 
 
-@allure.title("Обновление данных пользователя")
-def update_user_data(user_data, token=None):
-    headers = {}
 
-    if token:
-        headers = {"Authorization": f"Bearer {token}"}
-    response = requests.patch(ENDPOINTS["user"], json=user_data, headers=headers)
-    return response

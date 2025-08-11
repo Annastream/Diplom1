@@ -1,5 +1,50 @@
+# Expected responses for user creation tests
 
 
+USER_ALREADY_EXISTS = {
+    "success": False,
+    "message": "User already exists"
+}
+
+MISSING_FIELDS_RESPONSE = {
+    "success": False,
+    "message": "Email, password and name are required fields"
+}
+
+# Expected responses for order tests
+ORDER_SUCCESS_RESPONSE = {
+    "success": True,
+    "order": {
+        "ingredients": list,
+        "_id": str,
+        "status": str,
+        "name": str,
+        "createdAt": str,
+        "updatedAt": str
+    }
+}
+
+ORDER_MISSING_INGREDIENTS = {
+    "success": False,
+    "message": "Ingredient ids must be provided"
+}
+
+# Expected responses for login tests
+LOGIN_SUCCESS_RESPONSE = {
+    "success": True,
+    "accessToken": str,
+    "refreshToken": str,
+    "user": {
+        "email": str,
+        "name": str
+    }
+}
+
+INVALID_CREDENTIALS_RESPONSE = {
+    "success": False,
+    "message": "email or password are incorrect"
+}
+# Базовые настройки
 BASE_URL = "https://stellarburgers.nomoreparties.site"
 
 ENDPOINTS = {
@@ -11,6 +56,7 @@ ENDPOINTS = {
     "orders": f"{BASE_URL}/api/orders"
 }
 
+# Тестовые данные
 EXISTING_USER = {
     "email": "standuppp@gmail.com",
     "password": "querty135",

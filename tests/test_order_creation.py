@@ -1,73 +1,31 @@
 import allure
-from data import INGREDIENTS, EXISTING_USER
-from helpers.api_requests import create_order
+from data import *
 
-@allure.feature("Создание заказа")
-@allure.story("Тестирование функционала создания заказа с различными условиями")
-class TestOrder:
+@allure.feature('Авторизация пользователя')
+@allure.story('Тестирование различных сценариев авторизации')
+class TestUserLogin:
 
-    @allure.title("Тест создания заказа с авторизацией")
-    def test_create_order_with_auth(self, login_user):
-        # Авторизация и проверка успешного входа
-        auth_response = login_user(EXISTING_USER)
-        assert auth_response.status_code == 200, f"Ошибка во время входа в систему: {auth_response.text}"
+    @allure.title('Тест успешного входа с корректными данными')
+    def test_login_successful(self, login_user):
+        with allure.step('Отправляем запрос на вход с существующими данными'):
+            response = login_user(EXISTING_USER)
 
-        # Получаем токен и проверяем его формат
-        auth_token = auth_response.json().get("accessToken")
-        assert auth_token.startswith("Bearer "), "Токен должен начинаться с 'Bearer '"
+        with allure.step('Проверяем успешный ответ'):
+            assert response.status_code == 200, \
+                f"Ожидался код 200, получен {response.status_code}. Ответ: {response.text}"
+            response_json = response.json()
+            assert all(key in response_json for key in LOGIN_SUCCESS_RESPONSE.keys()), \
+                f"В ответе отсутствуют ожидаемые ключи. Ответ: {response_json}"
+            assert response_json["user"]["email"] == EXISTING_USER["email"], \
+                "Email пользователя не совпадает"
 
-        # Извлекаем сам токен (без 'Bearer ')
-        token = auth_token.split(' ')[1]
-        assert token, "Токен не должен быть пустым"
+    @allure.title('Тест неуспешного входа с неверными данными')
+    def test_login_invalid_credentials(self, login_user):
+        with allure.step('Отправляем запрос на вход с неверными данными'):
+            response = login_user(INVALID_USER)
 
-        # Создаем заказ
-        order_data = {"ingredients": INGREDIENTS[:2]}
-        response = create_order(order_data, token)
-
-        # Проверяем успешное создание заказа
-        assert response.status_code == 200, f"Ошибка при создании заказа: {response.text}"
-        assert response.json().get("success") is True, "Не удалось создать заказ"
-
-    @allure.title("Тест создания заказа без авторизации")
-    def test_create_order_without_auth(self):
-        order_data = {"ingredients": INGREDIENTS[:2]}
-        response = create_order(order_data)
-
-        assert response.status_code == 200, f"Ожидаемый ответ 200, но вернулся {response.status_code}"
-        response_data = response.json()
-        assert response_data["success"] is True, "Не удалось создать заказ"
-        assert "order" in response_data, "В ответе отсутствует информация о заказе"
-
-    @allure.title("Тест создания заказа с ингредиентами")
-    def test_create_order_with_ingredients(self):
-        order_data = {"ingredients": INGREDIENTS[:2]}
-        response = create_order(order_data)
-
-        assert response.status_code == 200, f"Ошибка при создании заказа: {response.text}"
-        assert response.json().get("success") is True, "Не удалось создать заказ"
-
-    @allure.title("Тест создания заказа без ингредиентов")
-    def test_create_order_without_ingredients(self):
-        order_data = {}
-        response = create_order(order_data)
-
-        assert response.status_code == 400, f"Ожидаемый ответ 400 Bad Request, но вернулся {response.status_code}"
-        assert response.json().get("success") is False, "Ожидалась ошибка из-за отсутствия ингредиентов"
-
-    @allure.title("Тест создания заказа с неверным хешем ингредиентов")
-    def test_create_order_with_invalid_ingredient_hash(self):
-        order_data = {"ingredients": ["44445"]}
-        response = create_order(order_data)
-
-        assert response.status_code == 500, f"Ожидаемый ответ 500 Internal Server Error, но вернулся {response.status_code}"
-
-        # 4. Парсинг ответа
-        # 2. Проверка типа ответа (HTML вместо JSON)
-        assert "text/html" in response.headers.get("Content-Type", ""), (
-            "При ошибке 500 ожидается HTML-ответ"
-        )
-
-        # 3. Проверка содержимого HTML-ответа
-        assert "Internal Server Error" in response.text, (
-            "В ответе отсутствует текст ошибки")
-
+        with allure.step('Проверяем ошибку авторизации'):
+            assert response.status_code == 401, \
+                f"Ожидался код 401, получен {response.status_code}. Ответ: {response.text}"
+            assert response.json() == INVALID_CREDENTIALS_RESPONSE, \
+                f"Ожидался ответ {INVALID_CREDENTIALS_RESPONSE}, получен: {response.json()}"

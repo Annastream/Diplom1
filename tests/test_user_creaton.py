@@ -1,12 +1,12 @@
 import allure
 from helpers.api_requests import login_user, get_user_data, register_user
-from data import EXISTING_USER, MISSING_FIELDS_USER
+from data import *
 
 @allure.feature("Создание пользователя")
 @allure.story("Тестирование создания пользователей с различными условиями")
 class TestUserCreation:
 
-    @allure.title("Тест создания уникального пользователя ")
+    @allure.title("Тест создания уникального пользователя")
     def test_create_unique_user_with_token_with_space(self, setup_unique_user):
         user_data = setup_unique_user
 
@@ -25,36 +25,21 @@ class TestUserCreation:
         assert response.json().get("user", {}).get("email") == user_data["email"], \
             f"Ожидался email: {user_data['email']}, получен: {response.json().get('user', {}).get('email')}"
 
-
     @allure.title("Тест создания уже существующего пользователя")
     def test_create_existing_user(self):
         response = register_user(EXISTING_USER)
         assert response.status_code == 403, \
             f"Ожидался код 403, получен {response.status_code}. Ответ: {response.text}"
-
-        expected_response = {
-            "success": False,
-            "message": "User already exists"
-        }
-
-        assert response.json() == expected_response, \
-            f"Ожидался ответ {expected_response}, получен: {response.json()}"
+        assert response.json() == USER_ALREADY_EXISTS, \
+            f"Ожидался ответ {USER_ALREADY_EXISTS}, получен: {response.json()}"
 
     @allure.title("Тест создания пользователя с отсутствующими обязательными полями")
     def test_create_user_missing_fields(self):
         incomplete_user = MISSING_FIELDS_USER.copy()
-        incomplete_user["password"] = ""  # Убираем обязательное поле
+        incomplete_user["password"] = ""
         response = register_user(incomplete_user)
 
         assert response.status_code == 403, \
             f"Ожидался код 403, получен {response.status_code}. Ответ: {response.text}"
-
-        expected_response = {
-            "success": False,
-            "message": "Email, password and name are required fields"
-        }
-
-        assert response.json() == expected_response, \
-            f"Ожидался ответ {expected_response}, получен: {response.json()}"
-
-
+        assert response.json() == MISSING_FIELDS_RESPONSE, \
+            f"Ожидался ответ {MISSING_FIELDS_RESPONSE}, получен: {response.json()}"
